@@ -44,6 +44,23 @@ export interface DocumentDetails {
   sharedWith: string[];
 }
 
+export type AuditAction =
+  | 'Uploaded'
+  | 'Viewed'
+  | 'Downloaded'
+  | 'Shared'
+  | 'Unshared'
+  | 'LinkEnabled'
+  | 'LinkDisabled'
+  | 'Deleted';
+
+export interface DocumentActivity {
+  action: AuditAction;
+  actorName: string;
+  targetName: string | null;
+  occurredAt: string;
+}
+
 export interface ProblemDetails {
   detail?: string;
   title?: string;

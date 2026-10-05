@@ -1,7 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, last, map, switchMap, takeWhile, timer } from 'rxjs';
-import { DocumentDetails, DocumentLibrary, UserSummary } from '../core/api.models';
+import {
+  DocumentActivity,
+  DocumentDetails,
+  DocumentLibrary,
+  UserSummary,
+} from '../core/api.models';
 
 export const PROCESSING_POLL_MS = 1000;
 
@@ -43,6 +48,10 @@ export class DocumentsApi {
       takeWhile((details) => details.status === 'Pending', true),
       last(),
     );
+  }
+
+  activity(id: string): Observable<DocumentActivity[]> {
+    return this.http.get<DocumentActivity[]>(`/api/documents/${id}/activity`);
   }
 
   delete(id: string): Observable<void> {

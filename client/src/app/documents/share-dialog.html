@@ -42,6 +42,24 @@
       }
     </fieldset>
 
+    <section aria-labelledby="share-activity-title" class="activity">
+      <h3 id="share-activity-title">Recent activity</h3>
+      @if (activity().length > 0) {
+        <ol tabindex="0" aria-labelledby="share-activity-title">
+          @for (entry of activity(); track $index) {
+            <li>
+              <strong>{{ entry.actorName }}</strong> {{ describe(entry) }}
+              <time [attr.datetime]="entry.occurredAt">{{
+                entry.occurredAt | date: 'medium'
+              }}</time>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="hint">No activity yet.</p>
+      }
+    </section>
+
     <div class="dialog-actions">
       <button type="button" class="primary" (click)="close()">Done</button>
     </div>

@@ -52,6 +52,30 @@ fieldset {
   min-width: 0;
 }
 
+.activity h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.activity ol {
+  max-height: 12rem;
+  overflow-y: auto;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.activity li {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity time {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;

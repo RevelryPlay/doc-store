@@ -44,20 +44,35 @@ public sealed record DocumentContent(Stream Content, string FileName, string Con
 
 public sealed class DocumentReader(
     IDocumentRepository documents,
+    IDocumentQueries queries,
     IDocumentStorage storage,
     IAuditLog audit,
     IUnitOfWork unitOfWork)
 {
+    public const int ActivityLimit = 50;
+
     public async Task<Result<DocumentDetails>> GetAsync(Guid documentId, Guid userId, string? linkToken, CancellationToken cancellationToken)
     {
         var document = await documents.FindAsync(documentId, cancellationToken);
-        return ToDetails(document, userId, linkToken);
+        return await ViewAsync(document, userId, linkToken, cancellationToken);
     }
 
     public async Task<Result<DocumentDetails>> GetByLinkAsync(string linkToken, Guid userId, CancellationToken cancellationToken)
     {
         var document = await documents.FindByLinkTokenAsync(linkToken, cancellationToken);
-        return ToDetails(document, userId, linkToken);
+        return await ViewAsync(document, userId, linkToken, cancellationToken);
+    }
+
+    public async Task<Result<IReadOnlyList<DocumentActivity>>> GetActivityAsync(Guid documentId, Guid ownerId, CancellationToken cancellationToken)
+    {
+        var owned = DocumentAccess.RequireOwner(await documents.FindAsync(documentId, cancellationToken), ownerId);
+        if (!owned.IsSuccess)
+        {
+            return owned.Error;
+        }
+
+        var activity = await queries.GetActivityAsync(documentId, ActivityLimit, cancellationToken);
+        return Result.Success(activity);
     }
 
     public async Task<Result<DocumentContent>> OpenAsync(Guid documentId, Guid userId, string? linkToken, CancellationToken cancellationToken)
@@ -76,11 +91,23 @@ public sealed class DocumentReader(
         return new DocumentContent(content, document.FileName, document.ContentType);
     }
 
-    private static Result<DocumentDetails> ToDetails(Document? document, Guid userId, string? linkToken)
+    // Owners' own reads (including status polling after upload) are not views worth auditing.
+    private async Task<Result<DocumentDetails>> ViewAsync(
+        Document? document, Guid userId, string? linkToken, CancellationToken cancellationToken)
     {
         var access = DocumentAccess.RequireAccess(document, userId, linkToken);
-        return access.IsSuccess
-            ? DocumentDetails.From(access.Value, DocumentAccess.Evaluate(access.Value, userId, linkToken))
-            : access.Error;
+        if (!access.IsSuccess)
+        {
+            return access.Error;
+        }
+
+        var level = DocumentAccess.Evaluate(access.Value, userId, linkToken);
+        if (level != AccessLevel.Owner)
+        {
+            audit.Record(access.Value.Id, userId, AuditAction.Viewed);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return DocumentDetails.From(access.Value, level);
     }
 }

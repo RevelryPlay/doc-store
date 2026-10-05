@@ -47,6 +47,20 @@ describe('ShareDialog', () => {
     fixture.componentInstance.open('doc-1');
     http.expectOne('/api/documents/doc-1').flush(details({ sharedWith: ['blake'] }));
     http.expectOne('/api/users').flush(users);
+    http.expectOne('/api/documents/doc-1/activity').flush([
+      {
+        action: 'Viewed',
+        actorName: 'Casey Morgan',
+        targetName: null,
+        occurredAt: '2026-10-01T12:00:00Z',
+      },
+      {
+        action: 'Shared',
+        actorName: 'Avery Chen',
+        targetName: 'Blake Rivera',
+        occurredAt: '2026-10-01T11:00:00Z',
+      },
+    ]);
     await fixture.whenStable();
   });
 
@@ -64,6 +78,7 @@ describe('ShareDialog', () => {
     const request = http.expectOne('/api/documents/doc-1/shares/blake');
     expect(request.request.method).toBe('DELETE');
     request.flush(null);
+    http.expectOne('/api/documents/doc-1/activity').flush([]);
     await fixture.whenStable();
     await Promise.resolve();
 
@@ -92,10 +107,20 @@ describe('ShareDialog', () => {
     toggle('share-link-enabled');
 
     http.expectOne('/api/documents/doc-1/link').flush({ token: 'abc123' });
+    http.expectOne('/api/documents/doc-1/activity').flush([]);
     await fixture.whenStable();
 
     const link = fixture.nativeElement.querySelector('#share-link-url') as HTMLInputElement;
     expect(link.value).toBe(`${location.origin}/s/abc123`);
+  });
+
+  it('shows who viewed the document and other recent activity', () => {
+    const entries = Array.from(
+      fixture.nativeElement.querySelectorAll('.activity li') as NodeListOf<HTMLLIElement>,
+    ).map((item) => item.textContent!.replace(/\s+/g, ' ').trim());
+
+    expect(entries[0]).toMatch(/^Casey Morgan viewed it/);
+    expect(entries[1]).toMatch(/^Avery Chen shared it with Blake Rivera/);
   });
 
   function checkbox(id: string): HTMLInputElement {

@@ -32,6 +32,10 @@ public static class DocumentEndpoints
             (await reader.OpenAsync(id, user.GetUserId(), link, cancellationToken))
                 .ToHttp(file => Results.File(file.Content, file.ContentType, file.FileName)));
 
+        documents.MapGet("/{id:guid}/activity", async (
+            Guid id, ClaimsPrincipal user, DocumentReader reader, CancellationToken cancellationToken) =>
+            (await reader.GetActivityAsync(id, user.GetUserId(), cancellationToken)).ToHttp(Results.Ok));
+
         documents.MapDelete("/{id:guid}", async (
             Guid id, ClaimsPrincipal user, DeleteDocument delete, CancellationToken cancellationToken) =>
             (await delete.ExecuteAsync(id, user.GetUserId(), cancellationToken)).ToHttp());

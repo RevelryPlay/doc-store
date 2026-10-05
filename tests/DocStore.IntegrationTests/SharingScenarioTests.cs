@@ -66,6 +66,33 @@ public class SharingScenarioTests(DocStoreFactory factory)
     }
 
     [Fact]
+    public async Task LinkView_AppearsInOwnersActivity()
+    {
+        using var blake = await factory.SignInAsync("blake");
+        using var casey = await factory.SignInAsync("casey");
+        var docB = await FindOwnedAsync(blake, DocB);
+        var token = (await blake.GetAsync<Details>($"/api/documents/{docB.Id}")).ShareLinkToken!;
+
+        await casey.GetAsync<Details>($"/api/links/{token}");
+        var activity = await blake.GetAsync<List<Activity>>($"/api/documents/{docB.Id}/activity");
+
+        Assert.Contains(activity, a => a.Action == "Viewed" && a.ActorName == "Casey Morgan");
+        Assert.DoesNotContain(activity, a => a.Action == "Viewed" && a.ActorName == "Blake Rivera");
+    }
+
+    [Fact]
+    public async Task Activity_IsForbiddenToSharedUsers()
+    {
+        using var avery = await factory.SignInAsync("avery");
+        using var blake = await factory.SignInAsync("blake");
+        var docA = await FindOwnedAsync(avery, DocA);
+
+        var response = await blake.SendAsync(HttpMethod.Get, $"/api/documents/{docA.Id}/activity");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task DocB_WithoutLink_IsNotFoundForOthers()
     {
         using var blake = await factory.SignInAsync("blake");

@@ -1,12 +1,14 @@
 using Dapper;
+using DocStore.Core.Auditing;
 using DocStore.Core.Documents;
 using Microsoft.EntityFrameworkCore;
 
 namespace DocStore.Api.Infrastructure.Persistence;
 
 /// <summary>
-/// The library view is the hottest read path, so it is one hand-written query rather than an EF projection.
-/// It shares the request's EF connection instead of opening a second one.
+/// Read-side queries as hand-written SQL. The library view is the hottest read path, and the activity feed
+/// joins audit rows to user names, which an EF projection would make no clearer.
+/// They share the request's EF connection instead of opening a second one.
 /// </summary>
 public sealed class DocumentQueries(DocStoreDbContext db) : IDocumentQueries
 {
@@ -23,6 +25,23 @@ public sealed class DocumentQueries(DocStoreDbContext db) : IDocumentQueries
         ORDER BY d.UploadedAt DESC
         """;
 
+    private const string ActivitySql = """
+        SELECT TOP (@Limit) a.Action, a.OccurredAt, actor.DisplayName AS ActorName, target.DisplayName AS TargetName
+        FROM AuditEntries a
+        JOIN Users actor ON actor.Id = a.UserId
+        LEFT JOIN Users target ON target.Id = a.TargetUserId
+        WHERE a.DocumentId = @DocumentId
+        ORDER BY a.OccurredAt DESC, a.Id DESC
+        """;
+
+    public async Task<IReadOnlyList<DocumentActivity>> GetActivityAsync(Guid documentId, int limit, CancellationToken cancellationToken)
+    {
+        var rows = await db.Database.GetDbConnection().QueryAsync<ActivityRow>(
+            new CommandDefinition(ActivitySql, new { DocumentId = documentId, Limit = limit }, cancellationToken: cancellationToken));
+
+        return [.. rows.Select(row => row.ToActivity())];
+    }
+
     public async Task<DocumentLibrary> GetLibraryAsync(Guid userId, CancellationToken cancellationToken)
     {
         var connection = db.Database.GetDbConnection();
@@ -37,6 +56,16 @@ public sealed class DocumentQueries(DocStoreDbContext db) : IDocumentQueries
         }
 
         return new DocumentLibrary(owned, shared);
+    }
+
+    private sealed class ActivityRow
+    {
+        public string Action { get; init; } = "";
+        public DateTimeOffset OccurredAt { get; init; }
+        public string ActorName { get; init; } = "";
+        public string? TargetName { get; init; }
+
+        public DocumentActivity ToActivity() => new(Enum.Parse<AuditAction>(Action), ActorName, TargetName, OccurredAt);
     }
 
     private sealed class LibraryRow

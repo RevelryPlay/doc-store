@@ -3,6 +3,7 @@ namespace DocStore.Core.Auditing;
 public enum AuditAction
 {
     Uploaded,
+    Viewed,
     Downloaded,
     Shared,
     Unshared,

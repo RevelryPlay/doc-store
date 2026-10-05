@@ -74,3 +74,5 @@ public sealed record ListItem(Guid Id, string FileName, string OwnerName, string
 public sealed record Details(Guid Id, string FileName, string Status, int? PageCount, string? Title, string Access, string? ShareLinkToken, List<Guid> SharedWith);
 
 public sealed record UserSummary(Guid Id, string DisplayName);
+
+public sealed record Activity(string Action, string ActorName, string? TargetName, DateTimeOffset OccurredAt);

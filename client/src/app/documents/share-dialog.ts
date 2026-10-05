@@ -1,6 +1,7 @@
+import { DatePipe } from '@angular/common';
 import { Component, ElementRef, computed, inject, output, signal, viewChild } from '@angular/core';
 import { Observable, forkJoin } from 'rxjs';
-import { DocumentDetails, UserSummary } from '../core/api.models';
+import { DocumentActivity, DocumentDetails, UserSummary } from '../core/api.models';
 import { Announcer } from '../core/announcer';
 import { problemMessage } from '../core/problem';
 import { Session } from '../core/session';
@@ -12,6 +13,7 @@ import { DocumentsApi } from './documents-api';
  */
 @Component({
   selector: 'app-share-dialog',
+  imports: [DatePipe],
   templateUrl: './share-dialog.html',
   styleUrl: './share-dialog.scss',
 })
@@ -25,6 +27,7 @@ export class ShareDialog {
 
   protected readonly document = signal<DocumentDetails | null>(null);
   protected readonly busy = signal(false);
+  protected readonly activity = signal<DocumentActivity[]>([]);
   private readonly users = signal<UserSummary[]>([]);
 
   protected readonly otherUsers = computed(() =>
@@ -36,19 +39,43 @@ export class ShareDialog {
   });
 
   open(documentId: string): void {
-    forkJoin([this.api.get(documentId), this.api.users()]).subscribe({
-      next: ([document, users]) => {
-        this.document.set(document);
-        this.users.set(users);
-        this.dialog().nativeElement.showModal();
+    forkJoin([this.api.get(documentId), this.api.users(), this.api.activity(documentId)]).subscribe(
+      {
+        next: ([document, users, activity]) => {
+          this.document.set(document);
+          this.users.set(users);
+          this.activity.set(activity);
+          this.dialog().nativeElement.showModal();
+        },
+        error: (error) =>
+          this.announcer.announce(problemMessage(error, 'Could not load sharing settings.')),
       },
-      error: (error) =>
-        this.announcer.announce(problemMessage(error, 'Could not load sharing settings.')),
-    });
+    );
   }
 
   close(): void {
     this.dialog().nativeElement.close();
+  }
+
+  protected describe(entry: DocumentActivity): string {
+    switch (entry.action) {
+      case 'Uploaded':
+        return 'uploaded it';
+      case 'Viewed':
+        return 'viewed it';
+      case 'Downloaded':
+        return 'downloaded it';
+      case 'Shared':
+        return `shared it with ${entry.targetName}`;
+      case 'Unshared':
+        return `removed access for ${entry.targetName}`;
+      case 'LinkEnabled':
+        return 'turned on link sharing';
+      case 'LinkDisabled':
+        return 'turned off link sharing';
+      case 'Deleted':
+        return 'deleted it';
+    }
   }
 
   protected isSharedWith(userId: string): boolean {
@@ -118,6 +145,7 @@ export class ShareDialog {
       next: (value) => {
         onSuccess(value);
         this.changed.emit();
+        this.refreshActivity();
       },
       error: (error) => {
         // The binding value never changed, so the DOM has to be put back by hand.
@@ -127,6 +155,13 @@ export class ShareDialog {
       },
       complete: () => this.busy.set(false),
     });
+  }
+
+  private refreshActivity(): void {
+    const id = this.document()?.id;
+    if (id) {
+      this.api.activity(id).subscribe((activity) => this.activity.set(activity));
+    }
   }
 
   private updateDocument(change: (document: DocumentDetails) => DocumentDetails): void {

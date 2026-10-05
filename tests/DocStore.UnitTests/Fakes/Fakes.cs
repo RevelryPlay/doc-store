@@ -87,6 +87,17 @@ internal sealed class RecordingQueue : IProcessingQueue
     }
 }
 
+internal sealed class StubQueries : IDocumentQueries
+{
+    public List<DocumentActivity> Activity { get; } = [];
+
+    public Task<DocumentLibrary> GetLibraryAsync(Guid userId, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Library queries are covered by integration tests.");
+
+    public Task<IReadOnlyList<DocumentActivity>> GetActivityAsync(Guid documentId, int limit, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<DocumentActivity>>([.. Activity.Take(limit)]);
+}
+
 internal sealed class InMemoryUsers(params User[] users) : IUserRepository
 {
     public Task<User?> FindByUserNameAsync(string userName, CancellationToken cancellationToken) =>

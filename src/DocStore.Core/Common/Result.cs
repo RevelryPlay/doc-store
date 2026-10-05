@@ -27,6 +27,9 @@ public class Result
 
     public static Result Success() => new(null);
 
+    // Implicit conversions can't come from interface types, so those need this explicitly.
+    public static Result<T> Success<T>(T value) => new(value);
+
     public static implicit operator Result(Error error) => new(error);
 }
 
@@ -34,7 +37,7 @@ public sealed class Result<T> : Result
 {
     private readonly T? _value;
 
-    private Result(T value) : base(null) => _value = value;
+    internal Result(T value) : base(null) => _value = value;
 
     private Result(Error error) : base(error) { }
 
