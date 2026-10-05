@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DocStore.Api/DocStore.Api.csproj" />
+    <Project Path="src/DocStore.Core/DocStore.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DocStore.IntegrationTests/DocStore.IntegrationTests.csproj" />
+    <Project Path="tests/DocStore.UnitTests/DocStore.UnitTests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DocStore.Core\DocStore.Core.csproj" />
+  </ItemGroup>
+
+</Project>
