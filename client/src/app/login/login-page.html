@@ -1,0 +1,48 @@
+<h1 tabindex="-1">Sign in</h1>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (error(); as error) {
+    <p class="error" role="alert">{{ error }}</p>
+  }
+
+  <div class="field">
+    <label for="userName">User name</label>
+    <input
+      id="userName"
+      formControlName="userName"
+      autocomplete="username"
+      [attr.aria-invalid]="showError('userName') || null"
+      [attr.aria-describedby]="showError('userName') ? 'userName-error' : null"
+    />
+    @if (showError('userName')) {
+      <p id="userName-error" class="error">Enter your user name.</p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="password">Password</label>
+    <input
+      id="password"
+      type="password"
+      formControlName="password"
+      autocomplete="current-password"
+      [attr.aria-invalid]="showError('password') || null"
+      [attr.aria-describedby]="showError('password') ? 'password-error' : null"
+    />
+    @if (showError('password')) {
+      <p id="password-error" class="error">Enter your password.</p>
+    }
+  </div>
+
+  <button type="submit" class="primary" [disabled]="busy()">
+    {{ busy() ? 'Signing in…' : 'Sign in' }}
+  </button>
+</form>
+
+<aside aria-labelledby="demo-heading" class="demo">
+  <h2 id="demo-heading">Demo accounts</h2>
+  <p>
+    Sign in as <code>avery</code>, <code>blake</code>, or <code>casey</code> with the password
+    <code>demo-password</code>.
+  </p>
+</aside>

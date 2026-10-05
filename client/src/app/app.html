@@ -1,0 +1,19 @@
+<a class="skip-link" href="#main" (click)="skipToMain($event)">Skip to main content</a>
+
+<header class="app-header">
+  <a routerLink="/documents" class="brand">Doc Store</a>
+  @if (session.user(); as user) {
+    <nav aria-label="Account" class="account">
+      <span
+        >Signed in as <strong>{{ user.displayName }}</strong></span
+      >
+      <button type="button" (click)="signOut()">Sign out</button>
+    </nav>
+  }
+</header>
+
+<div class="status" role="status">{{ announcer.message() }}</div>
+
+<main id="main" #main tabindex="-1">
+  <router-outlet />
+</main>

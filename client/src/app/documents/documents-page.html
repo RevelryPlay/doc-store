@@ -1,0 +1,55 @@
+<h1 tabindex="-1">Documents</h1>
+
+<section aria-labelledby="upload-heading" class="upload">
+  <h2 id="upload-heading">Upload a document</h2>
+  <form (submit)="upload($event)" novalidate>
+    <label for="file-input">PDF file</label>
+    <p id="file-hint" class="hint">PDF only, up to 20 MB.</p>
+    <div class="upload-row">
+      <input
+        #fileInput
+        id="file-input"
+        type="file"
+        accept="application/pdf,.pdf"
+        [attr.aria-describedby]="uploadError() ? 'file-hint file-error' : 'file-hint'"
+        [attr.aria-invalid]="uploadError() ? true : null"
+      />
+      <button type="submit" class="primary" [disabled]="uploading()">
+        {{ uploading() ? 'Uploading…' : 'Upload' }}
+      </button>
+    </div>
+    @if (uploadError(); as error) {
+      <p id="file-error" class="error">{{ error }}</p>
+    }
+  </form>
+</section>
+
+@if (library(); as library) {
+  <section aria-labelledby="owned-heading">
+    <h2 id="owned-heading" #ownedHeading tabindex="-1">My documents</h2>
+    @if (library.owned.length > 0) {
+      <app-document-table
+        [documents]="library.owned"
+        labelledBy="owned-heading"
+        [owned]="true"
+        (shareRequested)="share($event)"
+        (deleteRequested)="remove($event)"
+      />
+    } @else {
+      <p>You haven’t uploaded any documents yet.</p>
+    }
+  </section>
+
+  <section aria-labelledby="shared-heading">
+    <h2 id="shared-heading">Shared with me</h2>
+    @if (library.sharedWithMe.length > 0) {
+      <app-document-table [documents]="library.sharedWithMe" labelledBy="shared-heading" />
+    } @else {
+      <p>Nothing has been shared with you yet.</p>
+    }
+  </section>
+} @else {
+  <p>Loading documents…</p>
+}
+
+<app-share-dialog (changed)="reload()" />

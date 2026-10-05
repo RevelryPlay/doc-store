@@ -1,0 +1,49 @@
+<dialog #dialog aria-labelledby="share-dialog-title">
+  @if (document(); as document) {
+    <h2 id="share-dialog-title">Share “{{ document.fileName }}”</h2>
+
+    <fieldset [attr.aria-busy]="busy()">
+      <legend>People with access</legend>
+      @for (user of otherUsers(); track user.id) {
+        <div class="option">
+          <input
+            type="checkbox"
+            [id]="'share-user-' + user.id"
+            [checked]="isSharedWith(user.id)"
+            (change)="toggleUser(user, $event)"
+          />
+          <label [for]="'share-user-' + user.id">{{ user.displayName }}</label>
+        </div>
+      }
+    </fieldset>
+
+    <fieldset [attr.aria-busy]="busy()">
+      <legend>Link sharing</legend>
+      <div class="option">
+        <input
+          type="checkbox"
+          id="share-link-enabled"
+          aria-describedby="share-link-hint"
+          [checked]="document.shareLinkToken !== null"
+          (change)="toggleLink($event)"
+        />
+        <label for="share-link-enabled">Anyone signed in with the link can view</label>
+      </div>
+      <p id="share-link-hint" class="hint">
+        People who open the link can view and download it, but it won’t appear in their document
+        list.
+      </p>
+      @if (linkUrl(); as url) {
+        <label for="share-link-url">Link</label>
+        <div class="link-row">
+          <input id="share-link-url" type="text" readonly [value]="url" />
+          <button type="button" (click)="copyLink(url)">Copy link</button>
+        </div>
+      }
+    </fieldset>
+
+    <div class="dialog-actions">
+      <button type="button" class="primary" (click)="close()">Done</button>
+    </div>
+  }
+</dialog>

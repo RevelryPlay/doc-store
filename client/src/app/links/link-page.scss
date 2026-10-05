@@ -1,0 +1,18 @@
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1.5rem;
+}
+
+dt {
+  font-weight: 600;
+}
+
+dd {
+  margin: 0;
+}
+
+.preview {
+  max-width: 45rem;
+  color: var(--muted);
+}

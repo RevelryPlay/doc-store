@@ -1,0 +1,34 @@
+@if (document(); as document) {
+  <h1 tabindex="-1">{{ document.title ?? document.fileName }}</h1>
+  <dl>
+    <dt>File</dt>
+    <dd>{{ document.fileName }}</dd>
+    <dt>Access</dt>
+    <dd>{{ accessLabel(document.access) }}</dd>
+    @if (document.author) {
+      <dt>Author</dt>
+      <dd>{{ document.author }}</dd>
+    }
+    <dt>Pages</dt>
+    <dd>{{ document.pageCount ?? '–' }}</dd>
+    <dt>Size</dt>
+    <dd>{{ formatSize(document.sizeBytes) }}</dd>
+    <dt>Uploaded</dt>
+    <dd>{{ document.uploadedAt | date: 'mediumDate' }}</dd>
+  </dl>
+
+  <p>
+    <a [href]="contentUrl(document)" download>Download {{ document.fileName }}</a>
+  </p>
+
+  @if (document.textPreview) {
+    <h2>Preview</h2>
+    <p class="preview">{{ document.textPreview }}</p>
+  }
+} @else if (unavailable()) {
+  <h1 tabindex="-1">Link unavailable</h1>
+  <p>This link is invalid or sharing has been turned off. Ask the owner for a new link.</p>
+} @else {
+  <h1 tabindex="-1">Shared document</h1>
+  <p>Loading…</p>
+}

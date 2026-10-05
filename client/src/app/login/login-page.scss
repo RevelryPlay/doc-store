@@ -1,0 +1,26 @@
+form,
+.demo {
+  max-width: 24rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+  margin: 0.25rem 0 0;
+}
+
+.demo {
+  margin-top: 2.5rem;
+  color: var(--muted);
+}
+
+.demo h2 {
+  font-size: 1rem;
+}

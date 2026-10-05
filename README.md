@@ -25,15 +25,40 @@ dotnet user-secrets --project src/DocStore.Api set ConnectionStrings:DocStore \
 ## Run
 
 ```sh
-dotnet run --project src/DocStore.Api
+dotnet run --project src/DocStore.Api   # API on https://localhost:7075
+cd client && npm ci && npm start        # UI on http://localhost:4200, proxies /api to the API
 ```
 
-In Development the API applies migrations and seeds three demo users (`avery`, `blake`, `casey`, password `demo-password`) with the sample sharing scenario.
+In Development the API applies migrations and seeds demo users and documents.
+
+### Demo accounts
+
+All demo users share the password `demo-password`. This is seed data for local use only.
+
+| User name | Display name | Seeded documents |
+| --- | --- | --- |
+| `avery` | Avery Chen | Owns *Onboarding checklist* (shared with Blake) and *Employee handbook* (private, multi-page) |
+| `blake` | Blake Rivera | Owns *Benefits overview* (link sharing only) |
+| `casey` | Casey Morgan | Owns *Team handbook* (shared with Avery and Blake) |
+
+That gives each user a different view: Casey cannot see the onboarding checklist at all, and the benefits overview appears only in Blake's list but opens for anyone signed in who has its link.
+
+### Reset demo data
+
+Seeding only runs against an empty database. To start over (this deletes all local documents and users):
+
+```sh
+docker compose down -v                 # drop the SQL Server volume
+rm -rf src/DocStore.Api/App_Data       # remove stored document files
+docker compose up -d
+dotnet run --project src/DocStore.Api  # migrates and reseeds
+```
 
 ## Test
 
 ```sh
 dotnet test
+cd client && npm test && npm run lint && npm run format:check
 ```
 
 Integration tests start their own SQL Server container, so Docker must be running.

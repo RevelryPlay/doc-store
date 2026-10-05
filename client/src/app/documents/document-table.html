@@ -1,0 +1,69 @@
+<div class="table-scroll" role="region" tabindex="0" [attr.aria-labelledby]="labelledBy()">
+  <table [attr.aria-labelledby]="labelledBy()">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        @if (!owned()) {
+          <th scope="col">Owner</th>
+        }
+        <th scope="col">Pages</th>
+        <th scope="col">Size</th>
+        <th scope="col">Uploaded</th>
+        <th scope="col">Status</th>
+        @if (owned()) {
+          <th scope="col">Sharing</th>
+        }
+        <th scope="col"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (document of documents(); track document.id) {
+        <tr>
+          <th scope="row" class="name">
+            <details (toggle)="loadPreview(document, $event)">
+              <summary>
+                {{ document.fileName }}<span class="visually-hidden">, show text preview</span>
+              </summary>
+              <p class="preview">{{ previews()[document.id] ?? 'Loading preview…' }}</p>
+            </details>
+          </th>
+          @if (!owned()) {
+            <td>{{ document.ownerName }}</td>
+          }
+          <td>{{ document.pageCount ?? '–' }}</td>
+          <td>{{ formatSize(document.sizeBytes) }}</td>
+          <td>{{ document.uploadedAt | date: 'mediumDate' }}</td>
+          <td>
+            @switch (document.status) {
+              @case ('Pending') {
+                Processing…
+              }
+              @case ('Failed') {
+                <span class="failed">Could not process</span>
+              }
+              @default {
+                Ready
+              }
+            }
+          </td>
+          @if (owned()) {
+            <td>{{ sharingSummary(document) }}</td>
+          }
+          <td class="actions">
+            <a [href]="contentUrl(document)" download>
+              Download<span class="visually-hidden"> {{ document.fileName }}</span>
+            </a>
+            @if (owned()) {
+              <button type="button" (click)="shareRequested.emit(document)">
+                Share<span class="visually-hidden"> {{ document.fileName }}</span>
+              </button>
+              <button type="button" class="danger" (click)="deleteRequested.emit(document)">
+                Delete<span class="visually-hidden"> {{ document.fileName }}</span>
+              </button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
