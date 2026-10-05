@@ -401,3 +401,6 @@ dotnet_diagnostic.CA1716.severity = none
 # Method_Scenario_Outcome test names
 [tests/**.cs]
 dotnet_diagnostic.CA1707.severity = none
+
+[src/**/Migrations/*.cs]
+generated_code = true

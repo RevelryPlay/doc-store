@@ -23,9 +23,9 @@ internal sealed class SharingScenario
         Documents.Items.AddRange([DocA, DocB, DocC]);
     }
 
-    public User User1 { get; } = new("user1", "User One", "hash");
-    public User User2 { get; } = new("user2", "User Two", "hash");
-    public User User3 { get; } = new("user3", "User Three", "hash");
+    public User User1 { get; } = new("user1", "User One");
+    public User User2 { get; } = new("user2", "User Two");
+    public User User3 { get; } = new("user3", "User Three");
     public Document DocA { get; }
     public Document DocB { get; }
     public Document DocC { get; }
